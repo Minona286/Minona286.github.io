@@ -40,7 +40,6 @@
       transition: background 0.3s, color 0.3s;
     }
 
-    /* Фиолетовое свечение в правом нижнем углу */
     body::after {
       content: "";
       position: fixed;
@@ -55,7 +54,6 @@
       transition: background 0.3s;
     }
 
-    /* Черная волнистая шапка */
     .top-header {
       position: relative;
       width: 100%;
@@ -71,7 +69,6 @@
       box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
     }
 
-    /* Повернутый заголовок */
     .logo-title {
       font-family: Georgia, 'Times New Roman', serif;
       font-weight: 700;
@@ -84,14 +81,12 @@
       user-select: none;
     }
 
-    /* Правая часть шапки: переключатель темы + YouTube */
     .header-controls {
       display: flex;
       align-items: center;
       gap: 12px;
     }
 
-    /* Рисованный переключатель темы (солнце / луна) */
     .theme-toggle {
       background: none;
       border: none;
@@ -101,28 +96,14 @@
       align-items: center;
       -webkit-tap-highlight-color: transparent;
     }
-    .theme-toggle:active {
-      transform: scale(0.94);
-    }
-    .toggle-knob {
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    body:not(.light) .toggle-knob {
-      transform: translateX(0px);
-    }
-    body.light .toggle-knob {
-      transform: translateX(-34px);
-    }
+    .theme-toggle:active { transform: scale(0.94); }
+    .toggle-knob { transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    body:not(.light) .toggle-knob { transform: translateX(0px); }
+    body.light .toggle-knob { transform: translateX(-34px); }
 
-    .yt-link {
-      display: inline-block;
-      transition: transform 0.15s;
-    }
-    .yt-link:active {
-      transform: scale(0.92);
-    }
+    .yt-link { display: inline-block; transition: transform 0.15s; }
+    .yt-link:active { transform: scale(0.92); }
 
-    /* Основной контейнер с кнопками */
     .container {
       position: relative;
       z-index: 1;
@@ -159,7 +140,7 @@
     #installBtn {
       display: none;
       width: 100%;
-      margin-top: 24px;
+      margin-top: 20px;
       padding: 14px;
       background: #a800e6;
       color: #fff;
@@ -170,6 +151,17 @@
       cursor: pointer;
       box-shadow: 0 4px 15px rgba(168, 0, 230, 0.4);
     }
+
+    .old-ver-link {
+      display: block;
+      text-align: center;
+      margin-top: 26px;
+      color: var(--subtext);
+      font-size: 12px;
+      text-decoration: none;
+      opacity: 0.75;
+    }
+    .old-ver-link:hover { opacity: 1; }
   </style>
 </head>
 <body>
@@ -178,23 +170,17 @@
     <div class="logo-title">Minona hub</div>
 
     <div class="header-controls">
-      <!-- Переключатель темы (солнце / луна) -->
       <button class="theme-toggle" id="themeBtn" aria-label="Переключить тему">
         <svg width="96" height="72" viewBox="0 0 115 86" fill="none">
-          <!-- Лучи солнца -->
           <path d="M22 18L14 10M30 14L27 4M38 16L43 6M16 26L6 24" stroke="#fff" stroke-width="4.5" stroke-linecap="round"/>
-          <!-- Белая пилюля -->
           <g transform="rotate(14 58 38)">
             <rect x="22" y="22" width="72" height="32" rx="16" fill="#fff"/>
-            <!-- Подвижный кружок -->
             <circle class="toggle-knob" cx="76" cy="38" r="10.5" fill="#000"/>
           </g>
-          <!-- Полумесяц -->
           <path d="M72 64C62 62 58 74 68 78" stroke="#fff" stroke-width="5.5" stroke-linecap="round"/>
         </svg>
       </button>
 
-      <!-- Рисованная кнопка YouTube на твой канал -->
       <a href="https://youtube.com" target="_blank" class="yt-link" aria-label="YouTube">
         <svg width="56" height="50" viewBox="0 0 70 62" fill="none">
           <path d="M8 12C15 7 54 6 61 11C67 16 66 46 60 52C54 57 14 56 8 51C3 46 3 17 8 12Z" fill="#E60000" stroke="#fff" stroke-width="4.5" stroke-linejoin="round"/>
@@ -232,10 +218,10 @@
     </div>
 
     <button id="installBtn">📲 Установить Minona hub</button>
+    <a href="old.html" class="old-ver-link">🕰️ Переключиться на старый дизайн (v1.0)</a>
   </main>
 
   <script>
-    // Переключение и сохранение темы
     const themeBtn = document.getElementById('themeBtn');
     if (localStorage.getItem('theme') === 'light') {
       document.body.classList.add('light');
@@ -245,7 +231,6 @@
       localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
     });
 
-    // PWA Service Worker и кнопка установки
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js');
     }
