@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#000000">
-  <title>Linux Desktop — Minona hub</title>
+  <title>Linux Lab — Minona hub</title>
+  <script src="https://copy.sh"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -69,26 +70,42 @@
       max-width: 720px;
       width: 100%;
       margin: 0 auto;
-      padding: 20px 16px 40px;
+      padding: 18px 14px 40px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
     }
 
-    .emu-box {
+    /* Контейнер экрана эмулятора */
+    #screen_container {
       width: 100%;
-      height: 420px;
+      min-height: 320px;
       background: #000;
-      border: 1px solid #2e2e2e;
-      border-radius: 16px;
-      overflow: hidden;
+      border: 1px solid #333;
+      border-radius: 14px;
+      padding: 10px;
+      overflow-x: auto;
       position: relative;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.9);
     }
 
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
+    #screen_container div {
+      white-space: pre;
+      font: 13px monospace;
+      line-height: 15px;
+      color: #00ff66;
+    }
+
+    #screen_container canvas {
+      display: none;
+      max-width: 100%;
+    }
+
+    /* Скрытое поле для вызова клавиатуры на телефоне */
+    #mobileInput {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
     }
 
     .controls-row {
@@ -99,8 +116,8 @@
 
     .btn {
       flex: 1;
-      min-width: 160px;
-      padding: 14px;
+      min-width: 140px;
+      padding: 13px;
       border-radius: 14px;
       border: none;
       font-weight: 700;
@@ -119,14 +136,10 @@
       color: #fff;
       border: 1px solid #363636;
     }
-    .hint {
+    .status-bar {
       font-size: 12px;
-      color: #9e9e9e;
-      line-height: 1.4;
-      background: rgba(30, 30, 30, 0.85);
-      padding: 12px 14px;
-      border-radius: 12px;
-      border: 1px solid #2a2a2a;
+      color: #a5a5a5;
+      text-align: center;
     }
   </style>
 </head>
@@ -139,25 +152,61 @@
   </header>
 
   <main class="container">
-    <div class="hint">
-      Внизу запущен <b>Damn Small Linux</b> прямо в браузере (на базе v86). Нажми на черный экран, чтобы печатать команды (например, <code>ls</code>, <code>top</code> или <code>rm -rf /</code>).
-    </div>
+    <div class="status-bar" id="status">⏳ Загрузка ядра Linux (подожди 3–5 сек)...</div>
 
-        <!-- Встроенный эмулятор Linux -->
-    <div class="emu-box">
-      <iframe id="linuxFrame" allow="fullscreen"></iframe>
+    <!-- Экран эмулятора -->
+    <div id="screen_container" onclick="focusKeyboard()">
+      <div></div>
+      <canvas></canvas>
     </div>
+    <input type="text" id="mobileInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
 
     <div class="controls-row">
-      <button class="btn btn-secondary" onclick="document.getElementById('linuxFrame').src = document.getElementById('linuxFrame').src">🔄 Перезагрузить ОС</button>
-      <a id="csBtn" href="#" target="_blank" class="btn btn-primary">🚀 Мощный Ubuntu (Codespaces)</a>
+      <button class="btn btn-secondary" onclick="focusKeyboard()">⌨️ Клавиатура</button>
+      <button class="btn btn-secondary" onclick="emulator.restart()">🔄 Ребут</button>
+      <a id="csBtn" href="#" target="_blank" class="btn btn-primary">🚀 Ubuntu (Codespaces)</a>
     </div>
   </main>
 
   <script>
-    document.getElementById('linuxFrame').src = 'https://copy.sh' + '/v86/?profile=dsl';
-    document.getElementById('csBtn').href = 'https://github.com' + '/codespaces/new';
+    const base = "https://copy.sh" + "/v86/";
+    document.getElementById("csBtn").href = "https://github.com" + "/codespaces/new";
+
+    const emulator = new V86({
+      wasm_path: base + "build/v86.wasm",
+      memory_size: 64 * 1024 * 1024,
+      vga_memory_size: 2 * 1024 * 1024,
+      screen_container: document.getElementById("screen_container"),
+      bios: { url: base + "bios/seabios.bin" },
+      vga_bios: { url: base + "bios/vgabios.bin" },
+      bzimage: { url: base + "images/buildroot-bzimage.bin" },
+      cmdline: "tsc=reliable mitigations=off random.trust_cpu=on",
+      autostart: true
+    });
+
+    emulator.add_listener("emulator-ready", function() {
+      document.getElementById("status").textContent = "✅ Ядро загружено! Нажми «⌨️ Клавиатура» и вводи команды (например: ls, uname -a, rm -rf /)";
+    });
+
+    // Поддержка ввода с экранной клавиатуры телефона
+    const mobileInput = document.getElementById("mobileInput");
+    function focusKeyboard() {
+      mobileInput.focus();
+    }
+    mobileInput.addEventListener("input", (e) => {
+      if (e.data) {
+        emulator.keyboard_send_text(e.data);
+      }
+      mobileInput.value = "";
+    });
+    mobileInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        emulator.keyboard_send_scancodes([0x1C, 0x9C]);
+      } else if (e.key === "Backspace") {
+        emulator.keyboard_send_scancodes([0x0E, 0x8E]);
+      }
+    });
   </script>
-  
+
 </body>
 </html>
