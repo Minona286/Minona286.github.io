@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#000000">
+  <title>Linux Desktop — Minona hub</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #141414;
+      color: #ffffff;
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      bottom: -140px;
+      right: -120px;
+      width: 440px;
+      height: 520px;
+      background: radial-gradient(circle, rgba(168, 0, 230, 0.65) 0%, rgba(120, 0, 180, 0.2) 55%, transparent 75%);
+      filter: blur(35px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .top-header {
+      width: 100%;
+      height: 95px;
+      background: #000000;
+      border-bottom-left-radius: 50% 14px;
+      border-bottom-right-radius: 50% 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 18px 18px;
+      z-index: 2;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+    }
+
+    .back-btn {
+      color: #fff;
+      text-decoration: none;
+      background: #222;
+      border: 1px solid #333;
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .back-btn:active { transform: scale(0.95); }
+
+    .page-title {
+      font-family: Georgia, serif;
+      font-weight: 700;
+      font-size: 20px;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 720px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .emu-box {
+      width: 100%;
+      height: 420px;
+      background: #000;
+      border: 1px solid #2e2e2e;
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .controls-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      flex: 1;
+      min-width: 160px;
+      padding: 14px;
+      border-radius: 14px;
+      border: none;
+      font-weight: 700;
+      font-size: 14px;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: #a800e6;
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(168, 0, 230, 0.4);
+    }
+    .btn-secondary {
+      background: #242424;
+      color: #fff;
+      border: 1px solid #363636;
+    }
+    .hint {
+      font-size: 12px;
+      color: #9e9e9e;
+      line-height: 1.4;
+      background: rgba(30, 30, 30, 0.85);
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid #2a2a2a;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="top-header">
+    <a href="index.html" class="back-btn">← Назад</a>
+    <div class="page-title">🐧 Linux Lab</div>
+    <div style="width: 70px;"></div>
+  </header>
+
+  <main class="container">
+    <div class="hint">
+      Внизу запущен <b>Damn Small Linux</b> прямо в браузере (на базе v86). Нажми на черный экран, чтобы печатать команды (например, <code>ls</code>, <code>top</code> или <code>rm -rf /</code>).
+    </div>
+
+        <!-- Встроенный эмулятор Linux -->
+    <div class="emu-box">
+      <iframe id="linuxFrame" allow="fullscreen"></iframe>
+    </div>
+
+    <div class="controls-row">
+      <button class="btn btn-secondary" onclick="document.getElementById('linuxFrame').src = document.getElementById('linuxFrame').src">🔄 Перезагрузить ОС</button>
+      <a id="csBtn" href="#" target="_blank" class="btn btn-primary">🚀 Мощный Ubuntu (Codespaces)</a>
+    </div>
+  </main>
+
+  <script>
+    document.getElementById('linuxFrame').src = 'https://copy.sh' + '/v86/?profile=dsl';
+    document.getElementById('csBtn').href = 'https://github.com' + '/codespaces/new';
+  </script>
+  
+</body>
+</html>
