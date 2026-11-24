@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Скачать файлы v86</title>
+  <style>
+    body { background: #141414; color: #fff; font-family: system-ui; padding: 20px; display: flex; flex-direction: column; gap: 12px; max-width: 480px; margin: 0 auto; }
+    a { display: block; padding: 16px; background: #a800e6; color: #fff; text-decoration: none; border-radius: 12px; font-weight: 700; text-align: center; }
+    p { font-size: 13px; color: #aaa; }
+  </style>
+</head>
+<body>
+  <h2>📥 Файлы для эмулятора</h2>
+  <p>Нажми на каждую кнопку по очереди, чтобы скачать файлы на телефон:</p>
+  <div id="links"></div>
+
+  <script>
+    const gh = "https://github.com" + "/copy/v86/";
+    const raw = "https://githubusercontent.com" + "/copy/v86/master/";
+    const files = [
+      { name: "1. Релизы v86 (скачай оттуда libv86.js и v86.wasm)", url: gh + "releases" },
+      { name: "2. Скачать seabios.bin", url: raw + "bios/seabios.bin" },
+      { name: "3. Скачать vgabios.bin", url: raw + "bios/vgabios.bin" },
+      { name: "4. Скачать linux4.iso (~6 МБ)", url: raw + "images/linux4.iso" }
+    ];
+    const box = document.getElementById("links");
+    files.forEach(f => {
+      const a = document.createElement("a");
+      a.href = f.url;
+      a.target = "_blank";
+      a.textContent = f.name;
+      a.style.marginBottom = "10px";
+      box.appendChild(a);
+    });
+  </script>
+</body>
+</html>
