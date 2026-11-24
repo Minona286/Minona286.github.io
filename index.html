@@ -7,15 +7,39 @@
   <title>Minona hub</title>
   <link rel="manifest" href="manifest.json">
   <style>
+    :root {
+      --bg: #141414;
+      --text: #ffffff;
+      --subtext: #a5a5a5;
+      --card-bg: rgba(34, 34, 34, 0.92);
+      --card-border: #2e2e2e;
+      --card-active: #2c2c2c;
+      --glow: rgba(168, 0, 230, 0.75);
+      --glow-mid: rgba(120, 0, 180, 0.25);
+    }
+
+    body.light {
+      --bg: #f3f0f7;
+      --text: #141414;
+      --subtext: #555555;
+      --card-bg: rgba(255, 255, 255, 0.92);
+      --card-border: #ded8e8;
+      --card-active: #eae4f2;
+      --glow: rgba(185, 40, 245, 0.55);
+      --glow-mid: rgba(160, 30, 220, 0.18);
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background: #141414;
-      color: #fff;
+      background: var(--bg);
+      color: var(--text);
       font-family: system-ui, -apple-system, sans-serif;
       min-height: 100vh;
       position: relative;
       overflow-x: hidden;
+      transition: background 0.3s, color 0.3s;
     }
+
     /* Фиолетовое свечение в правом нижнем углу */
     body::after {
       content: "";
@@ -24,10 +48,11 @@
       right: -120px;
       width: 440px;
       height: 520px;
-      background: radial-gradient(circle, rgba(168, 0, 230, 0.75) 0%, rgba(120, 0, 180, 0.25) 55%, transparent 75%);
+      background: radial-gradient(circle, var(--glow) 0%, var(--glow-mid) 55%, transparent 75%);
       filter: blur(35px);
       pointer-events: none;
       z-index: 0;
+      transition: background 0.3s;
     }
 
     /* Черная волнистая шапка */
@@ -43,10 +68,10 @@
       justify-content: space-between;
       padding: 10px 18px 25px;
       z-index: 2;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
     }
 
-    /* Повернутый заголовок как на рисунке */
+    /* Повернутый заголовок */
     .logo-title {
       font-family: Georgia, 'Times New Roman', serif;
       font-weight: 700;
@@ -59,13 +84,36 @@
       user-select: none;
     }
 
-    /* Дудлы в правом верхнем углу */
-    .doodles {
+    /* Правая часть шапки: переключатель темы + YouTube */
+    .header-controls {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-top: -5px;
+      gap: 12px;
     }
+
+    /* Рисованный переключатель темы (солнце / луна) */
+    .theme-toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .theme-toggle:active {
+      transform: scale(0.94);
+    }
+    .toggle-knob {
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    body:not(.light) .toggle-knob {
+      transform: translateX(0px);
+    }
+    body.light .toggle-knob {
+      transform: translateX(-34px);
+    }
+
     .yt-link {
       display: inline-block;
       transition: transform 0.15s;
@@ -88,25 +136,25 @@
       gap: 14px;
     }
     .card {
-      background: rgba(34, 34, 34, 0.92);
-      border: 1px solid #2e2e2e;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
       border-radius: 18px;
       padding: 18px 15px;
       text-decoration: none;
-      color: #fff;
+      color: var(--text);
       display: flex;
       flex-direction: column;
       gap: 8px;
       backdrop-filter: blur(6px);
-      transition: transform 0.15s, background 0.15s;
+      transition: transform 0.15s, background 0.3s, border-color 0.3s;
     }
     .card:active {
       transform: scale(0.96);
-      background: #2c2c2c;
+      background: var(--card-active);
     }
     .icon { font-size: 28px; }
     .title { font-weight: 700; font-size: 16px; }
-    .desc { font-size: 12px; color: #a5a5a5; line-height: 1.35; }
+    .desc { font-size: 12px; color: var(--subtext); line-height: 1.35; }
 
     #installBtn {
       display: none;
@@ -129,21 +177,26 @@
   <header class="top-header">
     <div class="logo-title">Minona hub</div>
 
-    <div class="doodles">
-      <!-- Белый дудл с лучами -->
-      <svg width="88" height="72" viewBox="0 0 110 90" fill="none">
-        <!-- Лучи -->
-        <path d="M22 18L14 10M30 14L27 4M38 16L43 6M16 26L6 24" stroke="#fff" stroke-width="4.5" stroke-linecap="round"/>
-        <!-- Капсула/глаз -->
-        <ellipse cx="56" cy="36" rx="34" ry="15" transform="rotate(14 56 36)" fill="#fff"/>
-        <circle cx="75" cy="40" r="8.5" fill="#000"/>
-        <!-- Нижний крючок -->
-        <path d="M68 62C58 60 54 72 64 76" stroke="#fff" stroke-width="5.5" stroke-linecap="round"/>
-      </svg>
+    <div class="header-controls">
+      <!-- Переключатель темы (солнце / луна) -->
+      <button class="theme-toggle" id="themeBtn" aria-label="Переключить тему">
+        <svg width="96" height="72" viewBox="0 0 115 86" fill="none">
+          <!-- Лучи солнца -->
+          <path d="M22 18L14 10M30 14L27 4M38 16L43 6M16 26L6 24" stroke="#fff" stroke-width="4.5" stroke-linecap="round"/>
+          <!-- Белая пилюля -->
+          <g transform="rotate(14 58 38)">
+            <rect x="22" y="22" width="72" height="32" rx="16" fill="#fff"/>
+            <!-- Подвижный кружок -->
+            <circle class="toggle-knob" cx="76" cy="38" r="10.5" fill="#000"/>
+          </g>
+          <!-- Полумесяц -->
+          <path d="M72 64C62 62 58 74 68 78" stroke="#fff" stroke-width="5.5" stroke-linecap="round"/>
+        </svg>
+      </button>
 
-      <!-- Рисованная кнопка YouTube (можешь заменить # на ссылку на свой канал) -->
+      <!-- Рисованная кнопка YouTube на твой канал -->
       <a href="https://youtube.com" target="_blank" class="yt-link" aria-label="YouTube">
-        <svg width="58" height="52" viewBox="0 0 70 62" fill="none">
+        <svg width="56" height="50" viewBox="0 0 70 62" fill="none">
           <path d="M8 12C15 7 54 6 61 11C67 16 66 46 60 52C54 57 14 56 8 51C3 46 3 17 8 12Z" fill="#E60000" stroke="#fff" stroke-width="4.5" stroke-linejoin="round"/>
           <path d="M28 22L46 31L28 41V22Z" fill="#fff" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>
         </svg>
@@ -182,6 +235,17 @@
   </main>
 
   <script>
+    // Переключение и сохранение темы
+    const themeBtn = document.getElementById('themeBtn');
+    if (localStorage.getItem('theme') === 'light') {
+      document.body.classList.add('light');
+    }
+    themeBtn.addEventListener('click', () => {
+      document.body.classList.toggle('light');
+      localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
+    });
+
+    // PWA Service Worker и кнопка установки
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js');
     }
