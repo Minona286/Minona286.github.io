@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#000000">
   <title>Linux Lab — Minona hub</title>
-  <script src="https://copy.sh"></script>
+  <script src="https://unpkg.com"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -56,7 +56,6 @@
       font-size: 14px;
       font-weight: 600;
     }
-    .back-btn:active { transform: scale(0.95); }
 
     .page-title {
       font-family: Georgia, serif;
@@ -73,10 +72,31 @@
       padding: 18px 14px 40px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
     }
 
-    /* Контейнер экрана эмулятора */
+    /* Прогресс-бар загрузки */
+    .progress-wrap {
+      width: 100%;
+      background: #222;
+      border-radius: 10px;
+      height: 10px;
+      overflow: hidden;
+      border: 1px solid #333;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #a800e6, #00e676);
+      transition: width 0.2s;
+    }
+
+    .status-bar {
+      font-size: 12px;
+      color: #b5b5b5;
+      text-align: center;
+    }
+
     #screen_container {
       width: 100%;
       min-height: 320px;
@@ -86,7 +106,6 @@
       padding: 10px;
       overflow-x: auto;
       position: relative;
-      box-shadow: inset 0 0 20px rgba(0,0,0,0.9);
     }
 
     #screen_container div {
@@ -101,7 +120,6 @@
       max-width: 100%;
     }
 
-    /* Скрытое поле для вызова клавиатуры на телефоне */
     #mobileInput {
       position: absolute;
       opacity: 0;
@@ -129,17 +147,11 @@
     .btn-primary {
       background: #a800e6;
       color: #fff;
-      box-shadow: 0 4px 15px rgba(168, 0, 230, 0.4);
     }
     .btn-secondary {
       background: #242424;
       color: #fff;
       border: 1px solid #363636;
-    }
-    .status-bar {
-      font-size: 12px;
-      color: #a5a5a5;
-      text-align: center;
     }
   </style>
 </head>
@@ -152,9 +164,9 @@
   </header>
 
   <main class="container">
-    <div class="status-bar" id="status">⏳ Загрузка ядра Linux (подожди 3–5 сек)...</div>
+    <div class="status-bar" id="status">⏳ Инициализация эмулятора...</div>
+    <div class="progress-wrap"><div class="progress-fill" id="pBar"></div></div>
 
-    <!-- Экран эмулятора -->
     <div id="screen_container" onclick="focusKeyboard()">
       <div></div>
       <canvas></canvas>
@@ -163,48 +175,69 @@
 
     <div class="controls-row">
       <button class="btn btn-secondary" onclick="focusKeyboard()">⌨️ Клавиатура</button>
-      <button class="btn btn-secondary" onclick="emulator.restart()">🔄 Ребут</button>
+      <button class="btn btn-secondary" onclick="if(window.emulator) emulator.restart()">🔄 Ребут</button>
       <a id="csBtn" href="#" target="_blank" class="btn btn-primary">🚀 Ubuntu (Codespaces)</a>
     </div>
   </main>
 
   <script>
-    const base = "https://copy.sh" + "/v86/";
     document.getElementById("csBtn").href = "https://github.com" + "/codespaces/new";
+    const statusEl = document.getElementById("status");
+    const pBar = document.getElementById("pBar");
 
-    const emulator = new V86({
-      wasm_path: base + "build/v86.wasm",
-      memory_size: 64 * 1024 * 1024,
-      vga_memory_size: 2 * 1024 * 1024,
-      screen_container: document.getElementById("screen_container"),
-      bios: { url: base + "bios/seabios.bin" },
-      vga_bios: { url: base + "bios/vgabios.bin" },
-      bzimage: { url: base + "images/buildroot-bzimage.bin" },
-      cmdline: "tsc=reliable mitigations=off random.trust_cpu=on",
-      autostart: true
+    window.addEventListener("error", (e) => {
+      statusEl.textContent = "❌ Ошибка: " + e.message;
     });
 
-    emulator.add_listener("emulator-ready", function() {
-      document.getElementById("status").textContent = "✅ Ядро загружено! Нажми «⌨️ Клавиатура» и вводи команды (например: ls, uname -a, rm -rf /)";
-    });
+    if (typeof V86 === "undefined") {
+      statusEl.textContent = "❌ Библиотека v86 не загрузилась (проверь сеть)";
+    } else {
+      const cdn = "https://unpkg.com";
+      const imgBase = "https://copy.sh";
 
-    // Поддержка ввода с экранной клавиатуры телефона
-    const mobileInput = document.getElementById("mobileInput");
-    function focusKeyboard() {
-      mobileInput.focus();
+      window.emulator = new V86({
+        wasm_path: cdn + "build/v86.wasm",
+        memory_size: 64 * 1024 * 1024,
+        vga_memory_size: 2 * 1024 * 1024,
+        screen_container: document.getElementById("screen_container"),
+        bios: { url: cdn + "bios/seabios.bin" },
+        vga_bios: { url: cdn + "bios/vgabios.bin" },
+        bzimage: { url: imgBase + "buildroot-bzimage.bin" },
+        cmdline: "tsc=reliable mitigations=off random.trust_cpu=on",
+        autostart: true
+      });
+
+      emulator.add_listener("download-progress", function(e) {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100);
+          pBar.style.width = pct + "%";
+          statusEl.textContent = `📥 Загрузка (${e.file_name || "образа"}): ${pct}%`;
+        } else {
+          const mb = (e.loaded / 1024 / 1024).toFixed(1);
+          statusEl.textContent = `📥 Скачано: ${mb} МБ...`;
+        }
+      });
+
+      emulator.add_listener("download-error", function(e) {
+        statusEl.textContent = "❌ Не удалось скачать файл: " + (e.file_name || "CORS блокировка");
+      });
+
+      emulator.add_listener("emulator-ready", function() {
+        pBar.style.width = "100%";
+        statusEl.textContent = "✅ Linux запущен! Жми «⌨️ Клавиатура» и пиши команды";
+      });
     }
+
+    const mobileInput = document.getElementById("mobileInput");
+    function focusKeyboard() { mobileInput.focus(); }
     mobileInput.addEventListener("input", (e) => {
-      if (e.data) {
-        emulator.keyboard_send_text(e.data);
-      }
+      if (e.data && window.emulator) emulator.keyboard_send_text(e.data);
       mobileInput.value = "";
     });
     mobileInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        emulator.keyboard_send_scancodes([0x1C, 0x9C]);
-      } else if (e.key === "Backspace") {
-        emulator.keyboard_send_scancodes([0x0E, 0x8E]);
-      }
+      if (!window.emulator) return;
+      if (e.key === "Enter") emulator.keyboard_send_scancodes([0x1C, 0x9C]);
+      else if (e.key === "Backspace") emulator.keyboard_send_scancodes([0x0E, 0x8E]);
     });
   </script>
 
